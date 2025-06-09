@@ -1,0 +1,7 @@
+transformers[torch]
+pandas
+numpy
+datasets
+streamlit
+langchain
+langchain-google-genai
