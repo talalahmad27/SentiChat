@@ -105,6 +105,7 @@ The `Fine Tuning` directory contains the Jupyter notebook used to fine-tune the 
 - Ensure your `model_weights.pth` and tokenizer directory (`trained_model`) are correctly placed in the chatbot folder.
 - Keep your Google API key private. **Do not commit it to the repository.** Use `.gitignore` to exclude files containing secrets.
 - The app currently runs on CPU by default but will use GPU if available.
+- The Repo consists of a small demo video of a customer interacting with SentiChat. The responses of the chatbot are quite empathetic and based on the customer sentiment
 
 
 ---
