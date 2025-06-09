@@ -60,10 +60,10 @@ pip install -r requirements.txt
 
 ### 4. Add your Google Gemini API key
 
-Create a text file in the same directory as `chatbot.py` (e.g. `google_api_key.txt`) and paste your Gemini API key there.
+Create a text file in the same directory as `chatbot.py` (e.g. `google_api_key.txt`) and paste your Gemini API key at the following line in the code.
 
 ```text
-YOUR_GOOGLE_GEMINI_API_KEY
+with open(os.path.join(script_dir, "your_text_file_for_API_key_here.txt"), "r") as f:
 ```
 
 ### 5. Run the chatbot app
