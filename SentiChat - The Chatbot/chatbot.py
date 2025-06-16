@@ -11,7 +11,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Load the Gemini API key. This is for integration with LLM
-with open(os.path.join(script_dir, "gemini_api_key.txt"), "r") as f:
+with open(os.path.join(script_dir, "your_text_file_for_API_key_here.txt"), "r") as f:
     GOOGLE_API_KEY = f.read().strip()
 
 # Defining paths to the fine tuned Model and Tokenizer
@@ -73,7 +73,7 @@ summarizer_chain = LLMChain(llm=llm, prompt=summary_prompt)
 
 # Using streamlit for User interface with Python
 st.set_page_config(page_title="Your Customer Support Agent", page_icon="🤖")
-st.title("🧠  ChatCare: Your AI Support Specialist")
+st.title("🧠  SentiChat: Your AI Support Specialist")
 
 # Initializing some variables to be used during the interaction with customer
 if "messages" not in st.session_state:
