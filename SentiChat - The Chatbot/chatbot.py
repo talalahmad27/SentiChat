@@ -1,4 +1,5 @@
 import os
+import re
 import torch
 import streamlit as st
 from transformers import BertTokenizer, BertForSequenceClassification
@@ -10,7 +11,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Load the Gemini API key. This is for integration with LLM
-with open(os.path.join(script_dir, "your_text_file_for_API_key_here.txt"), "r") as f:
+with open(os.path.join(script_dir, "gemini_api_key.txt"), "r") as f:
     GOOGLE_API_KEY = f.read().strip()
 
 # Defining paths to the fine tuned Model and Tokenizer
@@ -40,8 +41,21 @@ def predict_sentiment(text):
         prediction = torch.argmax(logits, dim=1).item()
     return label_map[prediction]
 
+# === Helper: Extract aspect categories from text ===
+def extract_aspects(text):
+    aspects = []
+    if re.search(r'food|taste|meal|menu|dish', text, re.IGNORECASE):
+        aspects.append("Food")
+    if re.search(r'service|waiter|staff|employee', text, re.IGNORECASE):
+        aspects.append("Service")
+    if re.search(r'price|cost|value|expensive|cheap', text, re.IGNORECASE):
+        aspects.append("Price")
+    if re.search(r'clean|hygiene|environment|atmosphere', text, re.IGNORECASE):
+        aspects.append("Ambience")
+    return ", ".join(aspects) if aspects else "General"
+
 # Using Langchain for Google Gemini for interactive response with the customer
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=GOOGLE_API_KEY)
 template = PromptTemplate.from_template(
     "You are a chatbot analyzing customer reviews and interacting with them. Predict the user's sentiment and respond empathetically. The current sentiment of the customer is {sentiment}"
     "Ask one follow-up question at a time. You have {questions_left} follow up questions left. If no follow up questions left, close the conversations"
@@ -50,6 +64,11 @@ template = PromptTemplate.from_template(
 )
 llm_chain = LLMChain(llm=llm, prompt=template)
 
+# Initializing a LLM Chain for the summary as well
+summary_prompt = PromptTemplate.from_template(
+    "Summarize the customer's feedback based on the following conversation history. Highlight key concerns and suggestions.\n\n{history}\n\nSummary:"
+)
+summarizer_chain = LLMChain(llm=llm, prompt=summary_prompt)
 ########################################################################################################################################################################
 
 # Using streamlit for User interface with Python
@@ -65,7 +84,13 @@ if "questions_left" not in st.session_state:
 
 if "review_submitted" not in st.session_state:
     st.session_state.review_submitted = False
-    
+
+
+# Reset Button to reset the chat
+if st.button("🔄 Reset Conversation"):
+    st.session_state.clear()
+    st.rerun()
+
 sentiment_tmp = ""
 # Step - 1: Take the input from the customer and analyze it 
 if not st.session_state.review_submitted:
@@ -77,7 +102,8 @@ if not st.session_state.review_submitted:
             st.warning("Please enter a review.")
         else:
             sentiment = predict_sentiment(user_review)
-            user_msg = f"**(Sentiment: _{sentiment}_):** {user_review}"
+            aspects = extract_aspects(user_review)
+            user_msg = f"**(Sentiment: _{sentiment}_) | Aspects: {aspects}):** {user_review}"
             st.session_state.messages.append({"role": "user", "content": user_msg})
 
             # with st.chat_message("user"):
@@ -130,3 +156,20 @@ if st.session_state.review_submitted:
         st.session_state.messages.append({"role": "assistant", "content": response})
         with st.chat_message("assistant"):
             st.markdown(response)
+            
+# Section for Summarizing the review
+if st.session_state.review_submitted and st.button("📋 Summarize Conversation"):
+    history = ""
+    for m in st.session_state.messages:
+        prefix = "User" if m["role"] == "user" else "Assistant"
+        history += f"{prefix}: {m['content']}\n"
+
+    with st.spinner("📄 Generating summary..."):
+        try:
+            summary = summarizer_chain.run({"history": history.strip()})
+        except Exception as e:
+            summary = "⚠️ Summary generation failed."
+            st.error(f"Gemini error: {e}")
+
+    st.subheader("💡 Summary of Feedback")
+    st.markdown(summary)
