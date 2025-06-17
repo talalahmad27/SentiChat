@@ -56,7 +56,9 @@ pip install -r requirements.txt
 > - `transformers`
 > - `streamlit`
 > - `langchain`
-> - `langchain-google-genai`
+> - `langchain-google-geni`
+> - `deep_translator`
+> - `langdetect`
 
 ### 4. Add your Google Gemini API key
 
