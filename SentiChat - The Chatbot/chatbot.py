@@ -6,12 +6,14 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langdetect import detect
+from deep_translator import GoogleTranslator
 
 # Setting the script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Load the Gemini API key. This is for integration with LLM
-with open(os.path.join(script_dir, "your_text_file_for_API_key_here.txt"), "r") as f:
+with open(os.path.join(script_dir, "Your_API_key_here.txt"), "r") as f:
     GOOGLE_API_KEY = f.read().strip()
 
 # Defining paths to the fine tuned Model and Tokenizer
@@ -41,7 +43,16 @@ def predict_sentiment(text):
         prediction = torch.argmax(logits, dim=1).item()
     return label_map[prediction]
 
-# === Helper: Extract aspect categories from text ===
+
+# Function to translate the review
+def translate_review(text):
+    try:
+        return GoogleTranslator(source='auto', target='en').translate(text)
+    except:
+        return text
+
+
+# Extract aspect categories from text
 def extract_aspects(text):
     aspects = []
     if re.search(r'food|taste|meal|menu|dish', text, re.IGNORECASE):
@@ -54,6 +65,8 @@ def extract_aspects(text):
         aspects.append("Ambience")
     return ", ".join(aspects) if aspects else "General"
 
+
+
 # Using Langchain for Google Gemini for interactive response with the customer
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=GOOGLE_API_KEY)
 template = PromptTemplate.from_template(
@@ -64,13 +77,21 @@ template = PromptTemplate.from_template(
 )
 llm_chain = LLMChain(llm=llm, prompt=template)
 
+
+
+
 # Initializing a LLM Chain for the summary as well
 summary_prompt = PromptTemplate.from_template(
     "Summarize the customer's feedback based on the following conversation history. Highlight key concerns and suggestions.\n\n{history}\n\nSummary:"
 )
 summarizer_chain = LLMChain(llm=llm, prompt=summary_prompt)
-########################################################################################################################################################################
 
+
+
+
+
+
+########################################################################################################################################################################
 # Using streamlit for User interface with Python
 st.set_page_config(page_title="Your Customer Support Agent", page_icon="🤖")
 st.title("🧠  SentiChat: Your AI Support Specialist")
@@ -101,6 +122,8 @@ if not st.session_state.review_submitted:
         if not user_review.strip():
             st.warning("Please enter a review.")
         else:
+            lang = detect(user_review)
+            user_review = translate_review(user_review) if lang != 'en' else user_review
             sentiment = predict_sentiment(user_review)
             aspects = extract_aspects(user_review)
             user_msg = f"**(Sentiment: _{sentiment}_) | Aspects: {aspects}):** {user_review}"
