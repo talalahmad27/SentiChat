@@ -62,7 +62,7 @@ pip install -r requirements.txt
 
 ### 4. Add your Google Gemini API key
 
-Create a text file in the same directory as `chatbot.py` (e.g. `google_api_key.txt`) and paste your Gemini API key at the following line in the code.
+Create a text file in the same directory as `chatbot.py` (e.g. `google_api_key.txt`) and paste your Gemini API key at the following line in the code. Please note that this model is supported for Gemini-2.0-Flash only. Use the key for this model only.
 
 ```text
 with open(os.path.join(script_dir, "your_text_file_for_API_key_here.txt"), "r") as f:

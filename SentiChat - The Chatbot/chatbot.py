@@ -13,7 +13,7 @@ from deep_translator import GoogleTranslator
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Load the Gemini API key. This is for integration with LLM
-with open(os.path.join(script_dir, "Your_API_key_here.txt"), "r") as f:
+with open(os.path.join(script_dir, "your_api_key_here.txt"), "r") as f:
     GOOGLE_API_KEY = f.read().strip()
 
 # Defining paths to the fine tuned Model and Tokenizer
